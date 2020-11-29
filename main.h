@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-#include <pic16f628.h>
+#include <pic16f628a.h>
 #include "pic.h"
 
 #define BAUD_RATE 115200
@@ -73,7 +73,7 @@ void serialWrite(char* str, char length);
  **/
 void tokenMatchLoop(void);
 
-void interrupt isr(void);
+void __interrupt() isr(void);
 
 
 #ifdef	__cplusplus

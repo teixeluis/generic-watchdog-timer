@@ -33,7 +33,7 @@ extern "C" {
 
 #include <xc.h>
 #include <pic.h>
-#include <pic16f628.h>
+#include <pic16f628a.h>
 
 //#pragma config FOSC = INTOSCCLK
 #pragma config FOSC = HS

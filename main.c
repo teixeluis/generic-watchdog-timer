@@ -120,7 +120,7 @@ void serialWrite(char* str, char length) {
     }
 }
 
-void interrupt isr(void) {   
+void __interrupt() isr(void) {   
     TMR1IE = 0; // disable timer1 interrupts
     PEIE = 0;
     GIE = 0;
