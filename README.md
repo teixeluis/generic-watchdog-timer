@@ -85,8 +85,35 @@ The following software is needed for building this project:
 This project can be built on the MPLAB X IDE. It requires the XC8 toolchain for compiling 
 the firmware image.
 
-For building it can simply be opened in the IDE, and launch the project build. If your
-PIC programmer is directly supported, you can program the device by clicking on
+
+### Clone the repository to a location
+
+Fist clone this repo to a folder in your computer, for example using TortoiseGIT, or just downloading the files.
+
+### Create a new project in the IDE
+
+Create a new project in the IDE by going to "File" > "New Project" > "Microchip Embedded" > "Standalone Project". 
+In the device section, enter the device name: PIC16F628A. If your tool is compatible, select it in the
+dropdown box below the device selection.
+
+Hit "Next". In the compiler selection, select the XC8 compiler.
+
+Finally give a project name and a location.
+
+Now you need to add the source files from the this git project into your new project. On the 
+left side of the IDE (Projects tab), right click on your project and select "Add Existing Item...". 
+Select all the .c and .h files. Organize the header and c source files by dragging these to the 
+corresponding folders.
+
+### Build the project
+
+If everything is correct you should be able to build the project successfully. Click on the 
+"Clean and Build Main Project" icon in the top menu. The result should appear in the bottom
+"Output" tab.
+
+### Flash the device
+
+If your PIC programmer is directly supported, you can program the device by clicking on
 the "Make and program device" button in the icon menu.
 
 If you have a pickit2, after building the project, you need to connect your programmer,
