@@ -34,7 +34,28 @@ extern "C" {
 #include <pic16f628a.h>
 #include "pic.h"
 
-#define BAUD_RATE 115200
+//#define BAUD_RATE 115200 // note: 115200 bps is not achievable using the 4 MHz internal oscillator.
+#define BAUD_RATE 9600
+
+/*
+ * SPBRG should be calculated as:
+ * 
+ * SPBRG = (unsigned char) ((_XTAL_FREQ / 16) / BAUD_RATE) - 1;
+ * 
+ * For example for a 115200 baud rate and a 20 MHz clock frequency
+ * we have the following:
+ * 
+ * SPBRG = ((20 000 000 / 16) / 115200) - 1
+ * SPBRG = 9.850
+ * 
+ * If we round up to the nearest integer, we have:
+ * 
+ * SP_BAUD_TIMER=10
+ * 
+ */
+    
+// #define SP_BAUD_TIMER 10 // For baud rate = 1125200 and 20 MHz crystal
+#define SP_BAUD_TIMER 25 // For baud rate = 9600 and 4 MHz internal oscillator
 
 // (watchdog) timer related settings:
     
@@ -43,11 +64,15 @@ extern "C" {
  * 
  * TMR1_OFFSET = 65535 - (_XTAL_FREQ / (Prescaler * 40))
  *
+ * e.g. using a 20 MHz crystal and 1:8 prescaler:
+ * 
+ * 0x0BDB = 65535 - ( 20 000 000 / (8 * 40))
  */
-#define TMR1_OFFSET             0x0BDB      // Offset for calibrating the timer.
-#define WT_TIMEOUT              4000        // timeout period (in tenths of seconds) for the watchdog to trigger
+//#define TMR1_OFFSET             0x0BDB      // Offset for calibrating the timer (20 MHz crystal)
+#define TMR1_OFFSET             0xCF2B      // Offset for calibrating the timer (4 MHz internal oscillator).
+#define WT_TIMEOUT              3000        // timeout period (in tenths of seconds) for the watchdog to trigger
 #define POWER_OFF_DURATION      8000        // ms to keep power off for resetting the target device
-#define POWER_OFF_DELAY         3000        // delay between the poweroff command and actually powering off the device
+#define POWER_OFF_DELAY         3000        // delay (in ms) between the poweroff command and actually powering off the device
 #define WDT_TOKEN_LENGTH        14
 
 #define SHUTDOWN_CMD            "poweroff -f\r\n"
@@ -55,7 +80,7 @@ extern "C" {
 
 unsigned int timerCount;
 
-// this is should be a pseudo-unique string, so that 
+// this should be a pseudo-unique string, so that 
 // there is no chance of other output from the serial
 // port coincide with this value:
 
@@ -81,4 +106,3 @@ void __interrupt() isr(void);
 #endif
 
 #endif	/* MAIN_H */
-

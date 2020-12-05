@@ -19,7 +19,7 @@
  * used  for this particular application:
  *
  *                     +---------------+
- *   N/A         -   --|(RA2)|   |(RA1)|--   > RELAY
+ *   N/A         -   --|(RA2)|   |(RA1)|--   - N/A
  *                     |     \---/     |
  *   N/A         -   --|(RA3)     (RA0)|--   - N/A
  *                     |               |
@@ -33,7 +33,7 @@
  *                     |               |
  *   RX          >   --|(RB1)     (RB6)|--   - N/A
  *                     |               |
- *   TX          <   --|(RB2)     (RB5)|--   - N/A
+ *   TX          <   --|(RB2)     (RB5)|--   > RELAY
  *                     |               |
  *   N/A         -   --|(RB3)     (RB4)|--   - N/A
  *                     +---------------+
@@ -63,29 +63,38 @@
 #include "common.h"
 
 void init(void) {
+    // We need to set this if we are using the internal oscillator
+    // OSCF = 1 -> 4 MHz; OSCF = 0 -> 48 KHz
+    PCONbits.OSCF = 1;
+
+    // Disable the comparator:
+    CMCON = 0x07;
+    
+    // Initialize the GPIO pins:
+    PORTA = 0;
+    PORTB = 0;
+    
     // Serial port TX and RX pins set as output and input respectively.
-    // RA1 set as output for controlling the relay (or other switching device).
-    TRISA1 = 0;
+    // RB5 set as output for controlling the relay (or other switching device).
     TRISB1 = 1;
     TRISB2 = 0;
-    
-    // turn on the target device:
-    RA1 = 1;
-    
-    // serial port configuration:
-    //SPBRG = (unsigned char) ((_XTAL_FREQ / 16) / BAUD_RATE) - 1;
-    SPBRG = 10;
+    TRISB5 = 0;
+  
+    SPBRG = SP_BAUD_TIMER;
     BRGH = 1;  // for high baud_rate
     SYNC = 0;  // asynchronous mode
     SPEN = 1;  // enable the serial port pins
     TXEN = 1;  // enable transmission
-    CREN = 1;  // enable reception
+    CREN = 1;  // enable continuous reception
     TX9 = 0;   // 8-bit transmission selected
     RX9 = 0;   // 8-bit reception selected
 
     // timer initialization:
     TMR1CS = 0; // select internal Fosc/4 clock source
     T1CONbits.T1CKPS = 0b11; // enable 1:8 prescale
+    
+    // turn on the output for the relay:
+    PORTBbits.RB5 = 1;
 }
 
 void enableTimer(void) {
@@ -140,9 +149,9 @@ void __interrupt() isr(void) {
             __delay_ms(POWER_OFF_DELAY);
             
             // cycle the power of the device:
-            RA1 = 0;
+            PORTBbits.RB5 = 0;
             __delay_ms(POWER_OFF_DURATION);
-            RA1 = 1;
+            PORTBbits.RB5 = 1;
             timerCount = 0;
         }
     }
@@ -172,6 +181,9 @@ void tokenMatchLoop(void) {
 
         while(!RCIF);
         
+        // echo the received character into the output (use for debug only):
+        // serialWriteChar(RCREG);
+        
         // read a byte from the serial port and compare with the 
         // current char in the expected token:
         if(RCREG == wdtToken[wdtTokenCurrChar]) {
@@ -199,12 +211,10 @@ void tokenMatchLoop(void) {
 }
 
 void main(void) {
-    __delay_ms(30);
+    __delay_ms(1000);
     
     // initialize the peripherals:
     init();
-
-    __delay_ms(3000);
 
     // enable the watchdog timer:
     enableTimer();
