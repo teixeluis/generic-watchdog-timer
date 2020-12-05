@@ -144,7 +144,7 @@ void __interrupt() isr(void) {
             // Send the suthdown command to the device
             // and wait some time before cycling its power.
             
-            serialWrite(SHUTDOWN_CMD, SHUTDOWN_CMD_LEN);
+            serialWrite((char*) SHUTDOWN_CMD, SHUTDOWN_CMD_LEN);
 
             __delay_ms(POWER_OFF_DELAY);
             

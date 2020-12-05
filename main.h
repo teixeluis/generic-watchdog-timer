@@ -34,8 +34,13 @@ extern "C" {
 #include <pic16f628a.h>
 #include "pic.h"
 
-//#define BAUD_RATE 115200 // note: 115200 bps is not achievable using the 4 MHz internal oscillator.
+#define LOW_SPEED
+
+#ifdef LOW_SPEED
 #define BAUD_RATE 9600
+#else
+#define BAUD_RATE 115200 // note: 115200 bps is not achievable using the 4 MHz internal oscillator.
+#endif
 
 /*
  * SPBRG should be calculated as:
@@ -53,12 +58,13 @@ extern "C" {
  * SP_BAUD_TIMER=10
  * 
  */
-    
-// #define SP_BAUD_TIMER 10 // For baud rate = 1125200 and 20 MHz crystal
-#define SP_BAUD_TIMER 25 // For baud rate = 9600 and 4 MHz internal oscillator
 
-// (watchdog) timer related settings:
-    
+#ifdef LOW_SPEED
+#define SP_BAUD_TIMER 25 // For baud rate = 9600 and 4 MHz internal oscillator
+#else
+#define SP_BAUD_TIMER 10 // For baud rate = 1125200 and 20 MHz crystal
+#endif
+
 /*
  * The offset can be calculated as follows:
  * 
@@ -68,8 +74,14 @@ extern "C" {
  * 
  * 0x0BDB = 65535 - ( 20 000 000 / (8 * 40))
  */
-//#define TMR1_OFFSET             0x0BDB      // Offset for calibrating the timer (20 MHz crystal)
+#ifdef LOW_SPEED
 #define TMR1_OFFSET             0xCF2B      // Offset for calibrating the timer (4 MHz internal oscillator).
+#else
+#define TMR1_OFFSET             0x0BDB      // Offset for calibrating the timer (20 MHz crystal)    
+#endif
+
+// (watchdog) timer related settings:
+
 #define WT_TIMEOUT              3000        // timeout period (in tenths of seconds) for the watchdog to trigger
 #define POWER_OFF_DURATION      8000        // ms to keep power off for resetting the target device
 #define POWER_OFF_DELAY         3000        // delay (in ms) between the poweroff command and actually powering off the device

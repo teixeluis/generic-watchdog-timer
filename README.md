@@ -51,21 +51,26 @@ the WDT.
 I have selected this particular microcontroller due to the fact that I was already familiar 
 with the architecture, and this model in particular while being cheap, has a useful feature set.
 One such example is the integrated USART which besides other modes of operation, it can be 
-configured to behave as a regular RS-232 serial port. Regarding the later, one caveat that 
-this microcontroller presents, is at configuring an accurate enough approximation of the required
-baud rate. In the particular application for which I developed this WDT, I first intended to
-use the internal clock oscilator, which tops at 4 MHz. But for producing 115200, at this clock
-speed, the closest rate that is possible to obtain is 125000, which is quite a long shot.
-As such the only option in this case was to add an external 20 MHz crystal, and configure the
-clock to run at that speed. At this clock rate, the USART can generate 113 636 bps, which
-for most purposes is close enough (only 1.36 % off).
+configured to behave as a regular RS-232 serial port. 
 
-Regarding the voltage levels of the serial port, in my application I powered the PIC at 5 Volts,
-so that necessarily the TX and RX pins would output and expect TTL levels.
+In the simpler approach that is provided, the circuit can achieve the 9600 bps serial port speed,
+and several other bit rates (see the PIC16F628A datasheet for more details).
 
-I have attempted to run the device at 3.3 Volts but it was not stable enough because of the high
-clock frequency. So in my particular case, as I needed to interface with a device using CMOS 
-(3.3 Volt) levels, a level shifter was required.
+If the user needs 115200 bps for his application, then it is only feasible to run the device
+with an external clock to achieve that speed. In that case you must comment the line:
+
+```
+#define LOW_SPEED
+```
+
+that is in the main.h file.
+
+The code will default to assuming an external (HS) clock and a serial port bitrate of 115200 bps.
+Timer settings will have its values set accordingly.
+
+One aspect to note is that if the external 20 MHz crystal is chosen, it is no longer possible to
+power the device at 3.3 Volts. This has for example the implication that the serial port will
+need level shifting in order to interface with the 3.3 Volt serial port from the target device.
 
 ## Prerequisites
 
@@ -148,6 +153,7 @@ connected to it.
 
  * PICkit2 software - https://ww1.microchip.com/downloads/en/DeviceDoc/PICkit%202%20v2.61.00%20Setup%20dotNET%20A.zip
  * MPLAB X IDE - https://www.microchip.com/mplabx-ide-windows-installer
+ * PIC16F628A datasheet - http://ww1.microchip.com/downloads/en/devicedoc/40044f.pdf
 
 ## License
 

@@ -32,8 +32,13 @@ extern "C" {
 #endif
 
 // CONFIG
-//#pragma config FOSC = HS
+
+#ifdef LOW_SPEED
 #pragma config FOSC = INTOSCIO  // Oscillator Selection bits (INTOSC oscillator: I/O function on RA6/OSC2/CLKOUT pin, I/O function on RA7/OSC1/CLKIN)
+#else
+#pragma config FOSC = HS
+#endif
+
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled)
 #pragma config PWRTE = ON       // Power-up Timer Enable bit (PWRT enabled)
 #pragma config MCLRE = OFF      // RA5/MCLR/VPP Pin Function Select bit (RA5/MCLR/VPP pin function is digital input, MCLR internally tied to VDD)
@@ -49,8 +54,11 @@ extern "C" {
 #include <pic16f628a.h>
 
 #ifndef _XTAL_FREQ
-//#define _XTAL_FREQ 20000000
+#ifdef LOW_SPEED
 #define _XTAL_FREQ 4000000
+#else
+#define _XTAL_FREQ 20000000
+#endif
 #endif
     
 #ifdef	__cplusplus
