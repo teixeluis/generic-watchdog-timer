@@ -82,7 +82,7 @@ extern "C" {
 
 // (watchdog) timer related settings:
 
-#define WT_TIMEOUT              3000        // timeout period (in tenths of seconds) for the watchdog to trigger
+#define WT_TIMEOUT              6000        // timeout period (in tenths of seconds) for the watchdog to trigger
 #define POWER_OFF_DURATION      8000        // ms to keep power off for resetting the target device
 #define POWER_OFF_DELAY         3000        // delay (in ms) between the poweroff command and actually powering off the device
 #define WDT_TOKEN_LENGTH        14
