@@ -82,25 +82,49 @@ extern "C" {
 
 // (watchdog) timer related settings:
 
-#define WT_TIMEOUT              6000        // timeout period (in tenths of seconds) for the watchdog to trigger
-#define POWER_OFF_DURATION      8000        // ms to keep power off for resetting the target device
-#define POWER_OFF_DELAY         3000        // delay (in ms) between the poweroff command and actually powering off the device
-#define WDT_TOKEN_LENGTH        14
-
-#define SHUTDOWN_CMD            "poweroff -f\r\n"
-#define SHUTDOWN_CMD_LEN        14
-
+#define WT_TIMEOUT                  6000        // timeout period (in tenths of seconds) for the watchdog to trigger
+#define POWER_OFF_DURATION          8000        // ms to keep power off for resetting the target device
+#define POWER_OFF_DELAY             3000        // delay (in ms) between the poweroff command and actually powering off the device
+#define WDT_PREFIX_LENGTH           15
+#define WDT_CMD_LENGTH              16
+    
+#define SHUTDOWN_CMD                "poweroff -f\r\n"
+#define SHUTDOWN_CMD_LEN            13
+    
+    
 unsigned int timerCount;
 
-// this should be a pseudo-unique string, so that 
-// there is no chance of other output from the serial
-// port coincide with this value:
+// Prefix for every WDT command (relatively hard to occur in the host
+// serial output, other than from the job that resets the watchdog):
+const unsigned char *wdtPrefix = "WDT_BhAyycbmEi_";
 
-unsigned char wdtToken[WDT_TOKEN_LENGTH + 1] = "kiosk_wdtToken";
+// Commands accepted by the WDT:
+
+/*
+ 
+ This command is used for resetting the WDT:
+
+*/
+const unsigned char resetWdtCmd = '1';
+
+/*
+ 
+ This command is used for disabling the WDT:
+
+ */
+const unsigned char disableWdtCmd = '2';
+
+/*
+ 
+ This command is used for enabling the WDT again:
+ 
+ */
+unsigned char enableWdtCmd = '3';
 
 void init(void);
+void resetTimer(void);
 void enableTimer(void);
-void serialWriteChar(char value);
+void disableTimer(void);
 void serialWrite(char* str, char length);
 
 /**
@@ -110,7 +134,7 @@ void serialWrite(char* str, char length);
  **/
 void tokenMatchLoop(void);
 
-void __interrupt() isr(void);
+void isr(void);
 
 
 #ifdef	__cplusplus

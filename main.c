@@ -115,17 +115,28 @@ void enableTimer(void) {
     GIE = 1;
 }
 
-void serialWriteChar(char value) {
-    while(!TXIF);
+void disableTimer(void) {
+    // Disable timer1:
     
-    TXREG = value;
+    TMR1ON = 0;
+    
+    TMR1IE = 0; // disable timer1 interrupts
+//    PEIE = 0;
+//    GIE = 0;
+}
+
+void resetTimer(void) {
+    TMR1 = TMR1_OFFSET;
+    timerCount = 0;
 }
 
 void serialWrite(char* str, char length) {
     int i;
     
     for(i = 0; i < length; i++) {
-        serialWriteChar(str[i]);
+        while(!TXIF);
+    
+        TXREG = str[i];
     }
 }
 
@@ -165,47 +176,50 @@ void __interrupt() isr(void) {
 
 void tokenMatchLoop(void) {
     char matches;
-    unsigned char wdtTokenCurrChar;
+    char matchPhase;
+    unsigned char currCharIdx;
+    unsigned char currChar;
     
-    // check for errors:
-    if(OERR) {
-        CREN = 0;
-        CREN = 1;
-    }
-
     matches = 1;
-    wdtTokenCurrChar = 0;
+    currCharIdx = 0;
     
     while(matches) {
+        // check for errors:
+        if(OERR) {
+            CREN = 0;
+            CREN = 1;
+        }
+
         // let's wait for data:
 
         while(!RCIF);
-        
-        // echo the received character into the output (use for debug only):
-        // serialWriteChar(RCREG);
-        
+
+        currChar = RCREG;
+
         // read a byte from the serial port and compare with the 
         // current char in the expected token:
-        if(RCREG == wdtToken[wdtTokenCurrChar]) {
-            if(wdtTokenCurrChar < WDT_TOKEN_LENGTH - 1) {
-                wdtTokenCurrChar++;
-            }
-            else {
-                // We got to the end of the state machine
-                // and all characters matched the string.
-                // We may reset the watchdog:
-
-                wdtTokenCurrChar = 0;
-                TMR1 = TMR1_OFFSET;
-                timerCount = 0;
-                matches = 0;
+        if(currChar == wdtPrefix[currCharIdx]) {
+            if(currCharIdx < WDT_PREFIX_LENGTH) {
+                currCharIdx++;
             }
         }
         else {
-            // the current character did not match so we return
-            // to the beginning:
+            if(currChar == resetWdtCmd) {
+                serialWrite((char*) "#reset_wdt\r\n", 12);
+                resetTimer();
+            }
+            else if(currChar == disableWdtCmd) {
+                serialWrite((char*) "#disable_wdt\r\n", 14);
+                disableTimer();
+            }
+            else if(currChar == enableWdtCmd) {
+                serialWrite((char*) "#enable_wdt\r\n", 13);
+                enableTimer();
+            }
+            
             matches = 0;
-            wdtTokenCurrChar = 0;
+            currCharIdx = 0;
+            matchPhase = 0;
         }
     }
 }
