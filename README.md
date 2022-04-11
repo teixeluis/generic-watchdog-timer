@@ -176,6 +176,57 @@ connected to it.
 
 ![Alt](doc/images/generic_watchdog_rpi2.jpg "Watchdog Timer in Raspberry Pi 2")
 
+## Usage
+
+The commands that the WDT accepts are comprised of a prefix and a suffix:
+
+ * [prefix][suffix]
+ 
+Because this watchdog timer was initially designed to be used together with a Hassio instance 
+(the Home Assistant operating system), and given that the Raspberry Pi is by default configured 
+to output debug/system/kernel logs to the available serial port, there is going to be more 
+data going to the serial port, than just commands to control the WDT.
+
+As such, in order to avoid the WDT from confusing commands with other output from the Raspberry Pi
+(or other device connected to the WDT), I defined the prefix as a sufficiently long string of
+random characters that be very unlikely to occur for different reasons than as commands to control the WDT.
+
+As such the WDT currently supports the following commands:
+
+ * WDT_BhAyycbmEi_1 - resets the WDT. The system needs to call this command periodically in 
+order to prevent the WDT from restarting the device (the constant WT_TIMEOUT controls this
+timeout);
+ * WDT_BhAyycbmEi_2 - disables the WDT. This command suspends the normal operation of the WDT. It is 
+useful for example when a system reconfiguration needs to be done, and it is not possible to 
+keep sending the reset commands;
+ * WDT_BhAyycbmEi_3 - enables the WDT. This command enables the WDT, after having been kept 
+disabled with the previous command.
+
+After one of these commands is recognized by the WDT, the latter outputs a response, confirming 
+the command that was sent. For example to interact via a Home Assistant terminal:
+
+```
+[core-ssh watchdog]$ /bin/stty -F /dev/ttyAMA0 9600
+[core-ssh watchdog]$ cat /dev/ttyAMA0 &
+[1] 625
+[core-ssh watchdog]$ echo WDT_BhAyycbmEi_3 > /dev/ttyAMA0 
+[core-ssh watchdog]$ #enable_wdt
+```
+
+In this case we can see that the WDT reacted to "WDT_BhAyycbmEi_3" command (enable WDT) by outputting
+the string "#enable_wdt" to the serial port.
+
+There are the following possible responses:
+
+ * #reset_wdt - the WDT have been reset successfully;
+ * #enable_wdt - the WDT have been successfully enabled;
+ * #disable_wdt - the WDT have been successfully disabled.
+
+The choice to use the '#' character in the beginning of the strings, is for that fact that this
+way the messages are not interpreted by the bash interpreter of the host system as commands
+(it is assumed that we may be sharing the same port where a serial console is configured in the
+linux host).
+
 ## Relevant links
 
  * PICkit2 software - https://ww1.microchip.com/downloads/en/DeviceDoc/PICkit%202%20v2.61.00%20Setup%20dotNET%20A.zip
@@ -188,7 +239,7 @@ Author: Luis Teixeira (https://creationfactory.co)
 
 Licence and copyright notice:
 
-Copyright 2020 Luis Teixeira
+Copyright 2022 Luis Teixeira
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file 
 except in compliance with the License. You may obtain a copy of the License at
